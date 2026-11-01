@@ -32,36 +32,52 @@ Pages.devices = {
       ]));
       return;
     }
-    const grid = h('div.grid.devices');
     this.cards = new Map();
-    const order = ['keyboard', 'mouse', 'mousepad', 'headset', 'motherboard', 'gpu', 'ram', 'fan', 'cooler', 'ledstrip', 'panels', 'matrix', 'light'];
-    const sorted = devs.slice().sort((a, b) => (order.indexOf(a.type) + 99) % 99 - (order.indexOf(b.type) + 99) % 99 || a.name.localeCompare(b.name));
-    for (const d of sorted) {
-      const s = d.settings;
-      const cv = h('canvas');
-      const card = h('div.card.device' + (s.enabled ? '' : '.off'), [
-        h('div.viz', [cv, h('span.type.chip', esc(TYPE_LABEL[d.type] || d.type))]),
-        h('div.body', [
-          h('div.row', [h('div.grow', { style: { minWidth: 0 } }, [h('div.name', { title: d.name }, esc(d.name)), h('div.meta', `${esc(d.vendor)} · ${esc(driverName(d.driver))} · ${d.ledCount} LED${d.ledCount === 1 ? '' : 's'}`)]),
-            toggle(s.enabled, (v) => api('device:update', d.id, { enabled: v }))]),
-          h('div.ctl', [h('span.muted', { html: icon('sun') }), (() => { const sl = slider({ min: 0, max: 100, value: s.brightness ?? 100 }); sl.addEventListener('change', () => api('device:update', d.id, { brightness: Number(sl.value) })); return sl; })()]),
-          h('div.foot', [
-            h('button.btn.sm', { onclick: () => api('device:identify', d.id), html: icon('zap') + 'Identifizieren' }),
-            overrideButton(d),
-          ]),
-          d.lastError ? h('div.err', esc(d.lastError)) : null,
-        ]),
-      ]);
-      this.cards.set(d.id, { cv, d });
-      grid.appendChild(card);
+    const groups = new Map(CATEGORIES.map((c) => [c, []]));
+    for (const d of devs) groups.get(typeInfo(d.type).cat).push(d);
+    for (const [cat, list] of groups) {
+      if (!list.length) continue;
+      list.sort((a, b) => typeInfo(a.type).label.localeCompare(typeInfo(b.type).label) || a.name.localeCompare(b.name));
+      root.appendChild(h('div.dev-cat', [h('h3', esc(cat)), h('span.chip', `${list.length} Gerät${list.length === 1 ? '' : 'e'} · ${list.reduce((a, d) => a + d.ledCount, 0)} LEDs`)]));
+      root.appendChild(h('div.grid.devices', list.map((d) => this.card(d))));
     }
-    root.appendChild(grid);
+  },
+  card(d) {
+    const s = d.settings, ti = typeInfo(d.type);
+    const cv = h('canvas');
+    const badge = h('div.dev-icon', { html: icon(ti.icon) });
+    const card = h('div.card.device' + (s.enabled ? '' : '.off'), [
+      h('div.dev-head', [
+        badge,
+        h('div.grow', { style: { minWidth: 0 } }, [h('div.name', { title: d.name }, esc(d.name)), h('div.meta', [h('b', esc(ti.label)), ' · ', esc(d.vendor || '')])]),
+        toggle(s.enabled, (v) => api('device:update', d.id, { enabled: v })),
+      ]),
+      h('div.viz', [cv, h('div.viz-tags', [h('span.tag', `${d.ledCount} LED${d.ledCount === 1 ? '' : 's'}`), h('span.tag', esc(driverName(d.driver)))]), s.override ? h('span.tag.viz-ovr', s.override.type === 'static' ? 'Eigene Farbe' : 'Eigener Effekt') : null]),
+      h('div.body', [
+        h('div.ctl', [h('span.muted', { html: icon('sun') }), (() => { const sl = slider({ min: 0, max: 100, value: s.brightness ?? 100 }); const v = h('span.small.muted', { style: { width: '36px', textAlign: 'right' } }, (s.brightness ?? 100) + '%'); sl.addEventListener('input', () => (v.textContent = sl.value + '%')); sl.addEventListener('change', () => api('device:update', d.id, { brightness: Number(sl.value) })); return h('div.row.grow', { style: { flexWrap: 'nowrap' } }, [sl, v]); })()]),
+        h('div.foot', [
+          h('button.btn.sm', { onclick: () => api('device:identify', d.id), title: 'Gerät blinkt weiß', html: icon('zap') + 'Identifizieren' }),
+          overrideButton(d),
+        ]),
+        d.lastError ? h('div.err', esc(d.lastError)) : null,
+      ]),
+    ]);
+    this.cards.set(d.id, { cv, d, badge });
+    return card;
   },
   onPreview(p) {
     if (!this.cards) return;
-    for (const [id, c] of this.cards) { const col = p.devices[id]; drawLeds(c.cv, c.d.leds, col ? b64(col) : null, { pad: 26, aspect: c.d.aspect || (c.d.ledCount > 1 && c.d.leds.every((l) => l.y === c.d.leds[0].y) ? 10 : null) }); }
+    for (const [id, c] of this.cards) {
+      const col = p.devices[id] ? b64(p.devices[id]) : null;
+      DevViz.draw(c.cv, c.d, col);
+      const a = DevViz.avg(col);
+      c.badge.style.color = `rgb(${lightenRgb(a)})`;
+      c.badge.style.background = `rgba(${a.map((x) => x | 0)},0.16)`;
+      c.badge.style.boxShadow = `0 0 18px rgba(${a.map((x) => x | 0)},0.35)`;
+    }
   },
 };
+function lightenRgb(c) { const m = Math.max(...c, 1); const k = m < 120 ? 160 / m : 1; return c.map((x) => Math.min(255, x * k + 40) | 0).join(','); }
 function driverName(id) { const d = App.state.drivers.find((x) => x.id === id); return d ? d.name : id; }
 function overrideButton(d) {
   const o = d.settings.override;
