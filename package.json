@@ -63,7 +63,8 @@
       "deleteAppDataOnUninstall": false,
       "runAfterFinish": true
     },
-    "afterPack": "scripts/after-pack.js"
+    "afterPack": "scripts/after-pack.js",
+    "npmRebuild": false
   },
   "repository": "https://github.com/AleB-Roni/AleRGB"
 }
