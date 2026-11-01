@@ -136,13 +136,16 @@ class Kraken extends EventEmitter {
     const m = [...d];
     return this.prefix0 && m[0] === 0 && m.length > 64 ? m.slice(1) : m;
   }
-  async readUntil(match, attempts = 12) {
-    for (let i = 0; i < attempts; i++) { const m = await this.read(600); if (m && match(m)) return m; }
+  /** Liest, bis eine passende Nachricht kommt – zeitbasiert, damit viele dazwischenliegende Status-Reports nicht stören */
+  async readUntil(match, ms = 3000) {
+    const deadline = Date.now() + ms;
+    while (Date.now() < deadline) { const m = await this.read(Math.max(50, Math.min(500, deadline - Date.now()))); if (m && match(m)) return m; }
     throw new Error('Keine Antwort vom Gerät');
   }
-  /** Schreibt und wartet auf die passende Antwort (erstes Byte = Befehl + 1; Status-Reports 0x75 werden übersprungen) */
-  async request(data) { await this.write(data); return this.readUntil((m) => m[0] === data[0] + 1); }
-  async clear() { for (let i = 0; i < 64; i++) if (!(await this.read(5))) return; }
+  /** Schreibt und wartet auf die passende Antwort (erstes Byte = Befehl + 1). Vorher alte Reports verwerfen. */
+  async request(data) { await this.clear(); await this.write(data); return this.readUntil((m) => m[0] === data[0] + 1); }
+  /** Verwirft alle bereits empfangenen Reports (die Kraken sendet zwei Status-Meldungen pro Sekunde) */
+  async clear() { for (let i = 0; i < 256; i++) if (!(await this.read(2))) return; }
 
   async _init() {
     await this.clear();
@@ -160,6 +163,7 @@ class Kraken extends EventEmitter {
   // ---------------- Messwerte ----------------
   async readStatus() {
     return this.run(async () => {
+      await this.clear();
       await this.write([0x74, 0x01]);
       const m = await this.readUntil((x) => x[0] === 0x75);
       if (m[15] === 0xff && m[16] === 0xff) return this.status;
@@ -294,7 +298,7 @@ class Kraken extends EventEmitter {
       if (!(await this._switchBucket(idx))) this.log('warn', 'Kraken: Umschalten auf das neue Bild fehlgeschlagen');
     } finally { await this.closeBulk(); }
   }
-  async _deleteBucket(i) { await this.write([0x32, 0x02, i]); const m = await this.readUntil((x) => x[0] === 0x33 && x[1] === 0x02); return m[14] === 1; }
+  async _deleteBucket(i) { await this.clear(); await this.write([0x32, 0x02, i]); const m = await this.readUntil((x) => x[0] === 0x33 && x[1] === 0x02); return m[14] === 1; }
   async _prepareBucket(i, filled) {
     if (i >= 16) throw new Error('Kein freier Speicherplatz auf dem Display');
     if (!(await this._deleteBucket(i))) return this._prepareBucket(i + 1, true);

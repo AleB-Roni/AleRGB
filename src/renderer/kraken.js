@@ -117,7 +117,7 @@ Pages.kraken = {
     const card = h('div.card.pad.kdisplay', [
       h('div.row', [h('h2.grow', { style: { margin: 0 } }, `Display · ${res}×${res}`), h('button.btn.sm', { onclick: () => act(() => api('kraken:liquid'), 'Temperatur-Anzeige aktiv'), html: icon('droplet') + 'Temperatur-Anzeige' })]),
       drop, this.mediaInfo,
-      h('div.row', { style: { justifyContent: 'center' } }, [h('button.btn', { onclick: () => file.click(), html: icon('folder') + 'Bild oder GIF wählen' }), this.uploadBtn, file]),
+      h('div.row', { style: { justifyContent: 'center' } }, [h('button.btn', { onclick: () => file.click(), html: icon('folder') + 'Datei wählen' }), h('button.btn', { onclick: () => GifBrowser.open((f) => this.loadFile(f)), html: icon('search') + 'GIF-Browser' }), this.uploadBtn, file]),
       this.progress,
       k.lcd.gif ? null : h('div.note.warn', [h('span', { html: icon('alert') }), h('div', 'Die Firmware 2.x der Kraken 2023 unterstützt keine GIFs – Standbilder funktionieren.')]),
       h('details', { open: !!this.media }, [h('summary', 'Zuschnitt anpassen'), h('div.params', { style: { marginTop: '12px' } }, [
@@ -225,5 +225,72 @@ Pages.kraken = {
       s.fanRpm !== undefined ? tile('Lüfter', String(s.fanRpm), `U/min · ${s.fanDuty} %`) : null,
     );
     if (k.busy && this.progress && !this.progress.textContent) this.progress.textContent = 'Übertrage …';
+  },
+};
+
+/** GIF-Browser: GIPHY-Suche, Trends und GIFs per Link */
+const GifBrowser = {
+  async open(onPick) {
+    this.onPick = onPick; this.query = this.query || ''; this.offset = 0;
+    this.bg = h('div.modal-bg', { onclick: (e) => e.target === this.bg && this.close() });
+    this.body = h('div.gifb-body');
+    const q = h('input', { type: 'text', placeholder: 'GIFs suchen, z.B. „anime“, „fire“, „cat“ …', value: this.query, onkeydown: (e) => { if (e.key === 'Enter') { this.query = q.value; this.search(true); } } });
+    const link = h('input', { type: 'url', placeholder: 'Oder Link einfügen: giphy.com/…, tenor.com/…, direkter .gif-Link', onkeydown: (e) => e.key === 'Enter' && this.pick(link.value) });
+    this.modal = h('div.modal.gifb', [
+      h('div.row', [h('h2.grow', { style: { margin: 0 } }, 'GIF-Browser'), h('button.btn.ghost.sm', { onclick: () => this.close(), html: icon('x') })]),
+      h('div.row', { style: { flexWrap: 'nowrap', marginTop: '12px' } }, [q, h('button.btn.primary', { onclick: () => { this.query = q.value; this.search(true); }, html: icon('search') + 'Suchen' })]),
+      h('div.row', { style: { flexWrap: 'nowrap', marginTop: '8px' } }, [link, h('button.btn', { onclick: () => this.pick(link.value), html: icon('download') + 'Laden' })]),
+      this.body,
+      h('div.row', { style: { marginTop: '10px' } }, [h('span.small.dim.grow', 'Powered by GIPHY'), h('button.btn.ghost.sm', { onclick: () => this.keyForm(), html: icon('settings') + 'API-Schlüssel' })]),
+    ]);
+    this.bg.appendChild(this.modal);
+    document.getElementById('modalRoot').appendChild(this.bg);
+    setTimeout(() => q.focus(), 30);
+    if (await api('gif:hasKey')) this.search(true); else this.keyForm();
+  },
+  close() { if (this.bg) this.bg.remove(); this.bg = null; },
+  keyForm() {
+    const inp = h('input', { type: 'text', placeholder: 'GIPHY-API-Schlüssel einfügen' });
+    this.body.innerHTML = '';
+    this.body.append(h('div.card.pad', { style: { marginTop: '14px' } }, [
+      h('h2', 'Einmalig: kostenlosen GIPHY-Schlüssel anlegen'),
+      h('ol.small', { style: { lineHeight: 1.8, color: 'var(--mute)', paddingLeft: '18px' } }, [
+        h('li', { html: 'Auf <a href="https://developers.giphy.com/dashboard/" target="_blank">developers.giphy.com</a> kostenlos anmelden.' }),
+        h('li', { html: '<b>„Create an API Key“</b> → <b>API</b> (nicht SDK) → Name z.B. „AleRGB“ → erstellen.' }),
+        h('li', 'Den angezeigten API-Key kopieren und hier einfügen.'),
+      ]),
+      h('div.row', { style: { flexWrap: 'nowrap' } }, [inp, h('button.btn.primary', { onclick: () => act(() => api('gif:setKey', inp.value), 'Schlüssel gespeichert').then(() => this.search(true), () => {}), html: icon('save') + 'Speichern' })]),
+      h('p.small.muted', { style: { marginBottom: 0 } }, 'Ohne Schlüssel kannst du trotzdem GIFs über das Link-Feld oben laden.'),
+    ]));
+  },
+  async search(reset) {
+    if (reset) { this.offset = 0; this.body.innerHTML = ''; this.grid = h('div.gifb-grid'); this.more = h('button.btn', { style: { margin: '14px auto 0', display: 'none' }, onclick: () => this.search(false) }, 'Mehr laden'); this.body.append(this.grid, h('div', { style: { textAlign: 'center' } }, this.more)); }
+    this.more.textContent = 'Lädt …';
+    try {
+      const r = await api('gif:search', this.query, this.offset);
+      this.offset = r.offset;
+      if (!r.items.length && reset) this.grid.appendChild(h('div.muted', { style: { gridColumn: '1/-1', padding: '30px', textAlign: 'center' } }, 'Keine GIFs gefunden.'));
+      for (const it of r.items) {
+        const img = h('img', { src: it.preview, loading: 'lazy', alt: it.title });
+        this.grid.appendChild(h('div.gifb-item', { title: it.title, onclick: (e) => this.pick(it.url, e.currentTarget) }, [img, it.size ? h('span.tag', (it.size / 1e6).toFixed(1) + ' MB') : null]));
+      }
+      this.more.style.display = r.items.length ? '' : 'none';
+      this.more.textContent = 'Mehr laden';
+    } catch (e) {
+      this.more.style.display = 'none';
+      if (/Schlüssel|benötigt/.test(e.message)) return this.keyForm();
+      this.grid.appendChild(h('div.note.error', { style: { gridColumn: '1/-1' } }, [h('span', { html: icon('alert') }), h('div', esc(e.message))]));
+    }
+  },
+  async pick(url, el) {
+    if (!url) return;
+    if (el) el.classList.add('loading');
+    try {
+      const r = await api('gif:download', url);
+      const file = new File([r.data], r.name, { type: r.type });
+      this.close();
+      this.onPick(file);
+      toast('GIF geladen – prüfe den Zuschnitt und klicke „Aufs Display übertragen“.', 'ok');
+    } catch (e) { toast(e.message, 'error'); if (el) el.classList.remove('loading'); }
   },
 };

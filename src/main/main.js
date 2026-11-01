@@ -8,6 +8,7 @@ const CanvasHost = require('./canvasHost');
 const { EffectLibrary, parseHtmlEffect } = require('./effectLibrary');
 const { runDiagnostics } = require('./diagnostics');
 const KrakenService = require('./nzxt/service');
+const gifs = require('./gifs');
 
 const DEMO = process.argv.includes('--demo');
 const HIDDEN = process.argv.includes('--hidden');
@@ -147,6 +148,16 @@ function setupIpc() {
   h('kraken:orientation', (deg) => kraken.setOrientation(deg));
   h('kraken:liquid', () => kraken.showLiquid());
   h('kraken:retry', () => kraken.retry());
+  // GIF-Browser
+  h('gif:hasKey', () => !!config.get('settings').giphyKey);
+  h('gif:setKey', async (key) => {
+    key = String(key || '').trim();
+    if (key) await gifs.search(key, '', 0, 1); // Schlüssel prüfen
+    setSettings({ giphyKey: key });
+    return true;
+  });
+  h('gif:search', (query, offset) => gifs.search(config.get('settings').giphyKey, query, offset));
+  h('gif:download', (url) => gifs.download(url));
   h('kraken:upload', (kind, data, name) => kraken.upload(kind, data, name));
   // Eingaben aus dem Renderer (Audio-Analyse / Bildschirm)
   ipcMain.on('inputs:audio', (e, a) => { core.inputs.audio = a; canvas.setAudio(a); });
