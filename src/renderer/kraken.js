@@ -146,10 +146,13 @@ Pages.kraken = {
     const o = { ...this.view, rotation: k.lcd.orientation };
     this.uploadBtn.disabled = true;
     try {
-      if (m.kind === 'gif') {
-        const bytes = await KrakenMedia.gif(m, res, o, (p) => (this.progress.textContent = `GIF wird vorbereitet … ${Math.round(p * 100)} %`));
-        this.progress.textContent = `Übertrage ${(bytes.length / 1e6).toFixed(1)} MB …`;
-        await act(() => api('kraken:upload', 'gif', bytes, m.name), 'GIF ist jetzt auf deinem Display');
+      if (m.kind === 'gif' || k.lcd.gif) {
+        // Auch Standbilder gehen als GIF (1 Frame) raus – zuverlässiger und kleiner als Rohpixel,
+        // besonders bei Kraken 2023/Elite (siehe liquidctl #757).
+        const media = m.kind === 'gif' ? m : { ...m, frames: [{ ...m.frames[0], delay: 1000 }] };
+        const bytes = await KrakenMedia.gif(media, res, o, (p) => (this.progress.textContent = `Wird vorbereitet … ${Math.round(p * 100)} %`));
+        this.progress.textContent = `Übertrage ${(bytes.length / 1e6).toFixed(2)} MB …`;
+        await act(() => api('kraken:upload', 'gif', bytes, m.name), m.kind === 'gif' ? 'GIF ist jetzt auf deinem Display' : 'Bild ist jetzt auf deinem Display');
       } else {
         this.progress.textContent = 'Übertrage Bild …';
         await act(() => api('kraken:upload', 'image', new Uint8Array(KrakenMedia.rgba(m, res, o)), m.name), 'Bild ist jetzt auf deinem Display');
