@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kometen</title>
+  <meta description="Leuchtende Kometen mit Schweif ziehen kreuz und quer über dein Setup.">
+  <meta publisher="Spectra RGB">
+  <meta property="count" label="Anzahl" type="number" min="1" max="12" default="4">
+  <meta property="speed" label="Geschwindigkeit" type="number" min="1" max="20" default="7">
+  <meta property="trail" label="Schweiflänge" type="number" min="1" max="10" default="6">
+  <meta property="mode" label="Farben" type="combobox" values="Regenbogen,Eis,Feuer,Weiß" default="Regenbogen">
+</head>
+<body style="margin:0;background:#000">
+<canvas id="exCanvas" width="320" height="200"></canvas>
+<script>
+const ctx = document.getElementById('exCanvas').getContext('2d');
+let comets = [];
+function hueFor() { return mode === 'Eis' ? 180 + Math.random() * 50 : mode === 'Feuer' ? Math.random() * 45 : Math.random() * 360; }
+function spawn() { const a = Math.random() * Math.PI * 2; return { x: 160 - Math.cos(a) * 200, y: 100 - Math.sin(a) * 140, vx: Math.cos(a), vy: Math.sin(a), h: hueFor() }; }
+function frame() {
+  while (comets.length < count) comets.push(spawn());
+  comets.length = Math.round(count);
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.32 - trail * 0.028) + ')'; ctx.fillRect(0, 0, 320, 200);
+  for (let i = 0; i < comets.length; i++) {
+    const c = comets[i]; c.x += c.vx * speed * 0.4; c.y += c.vy * speed * 0.4;
+    if (c.x < -60 || c.x > 380 || c.y < -60 || c.y > 260) { comets[i] = spawn(); continue; }
+    const col = mode === 'Weiß' ? '255,255,255' : null;
+    const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 22);
+    g.addColorStop(0, col ? 'rgba(' + col + ',1)' : 'hsla(' + c.h + ',100%,70%,1)');
+    g.addColorStop(1, col ? 'rgba(' + col + ',0)' : 'hsla(' + c.h + ',100%,50%,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c.x, c.y, 22, 0, Math.PI * 2); ctx.fill();
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

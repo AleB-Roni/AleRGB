@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; media-src 'self' blob: mediastream:">
+  <title>Spectra RGB</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="titlebar">
+    <div class="brand"><span class="logo"></span><span>Spectra <b>RGB</b></span></div>
+    <div class="tb-center">
+      <button id="powerBtn" class="power" title="Beleuchtung an/aus (Strg+Alt+L)"></button>
+      <div class="tb-bright"><span class="ic" data-icon="sun"></span><input id="brightness" type="range" min="0" max="100"><span id="brightVal">100%</span></div>
+      <div class="tb-effect" id="tbEffect"></div>
+    </div>
+  </header>
+  <div class="shell">
+    <nav class="sidebar">
+      <div class="nav" id="nav"></div>
+      <div class="side-preview">
+        <canvas id="sidePreview" width="64" height="36"></canvas>
+        <div class="sp-label"><span class="dot live"></span><span id="sideEffectName">—</span></div>
+      </div>
+    </nav>
+    <main id="page"></main>
+  </div>
+  <div id="toasts"></div>
+  <div id="modalRoot"></div>
+  <script src="../shared/effects.js"></script>
+  <script src="ui.js"></script>
+  <script src="capture.js"></script>
+  <script src="pages.js"></script>
+  <script src="studio.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

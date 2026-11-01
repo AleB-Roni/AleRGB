@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Synthwave</title>
+  <meta description="Retro-80er: Neon-Sonne über einem fahrenden Gitter.">
+  <meta publisher="Spectra RGB">
+  <meta property="speed" label="Geschwindigkeit" type="number" min="1" max="20" default="6">
+  <meta property="sun" label="Sonne" type="boolean" default="1">
+  <meta property="gridColor" label="Gitterfarbe" type="color" default="#ff00e6">
+  <meta property="skyTop" label="Himmel oben" type="color" default="#0b0030">
+  <meta property="skyBottom" label="Himmel unten" type="color" default="#ff2a6d">
+</head>
+<body style="margin:0;background:#000">
+<canvas id="exCanvas" width="320" height="200"></canvas>
+<script>
+const ctx = document.getElementById('exCanvas').getContext('2d');
+let t = 0;
+function frame() {
+  t += speed / 400;
+  const hz = 110;
+  const sky = ctx.createLinearGradient(0, 0, 0, hz); sky.addColorStop(0, skyTop); sky.addColorStop(1, skyBottom);
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, 320, hz);
+  if (sun) {
+    const g = ctx.createLinearGradient(0, 30, 0, hz); g.addColorStop(0, '#ffe600'); g.addColorStop(1, '#ff0080');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(160, hz, 55, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = skyBottom; for (let i = 0; i < 5; i++) ctx.fillRect(100, hz - 8 - i * 9, 120, 2 + i * 0.6);
+  }
+  ctx.fillStyle = '#07001a'; ctx.fillRect(0, hz, 320, 200 - hz);
+  ctx.strokeStyle = gridColor; ctx.shadowColor = gridColor; ctx.shadowBlur = 8; ctx.lineWidth = 1.5;
+  for (let i = -12; i <= 12; i++) { ctx.beginPath(); ctx.moveTo(160 + i * 6, hz); ctx.lineTo(160 + i * 60, 200); ctx.stroke(); }
+  const off = t % 1;
+  for (let i = 0; i < 10; i++) { const z = (i + off) / 10, y = hz + Math.pow(z, 2.2) * (200 - hz); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(320, y); ctx.stroke(); }
+  ctx.shadowBlur = 0;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
