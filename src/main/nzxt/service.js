@@ -8,7 +8,7 @@ const DEFAULTS = { pump: { mode: 'preset', preset: 'balanced', duty: 70 }, fan: 
 class KrakenService extends EventEmitter {
   constructor(config, log) {
     super();
-    this.config = config; this.log = log; this.k = null; this.busy = null;
+    this.config = config; this.log = log; this.k = null; this.busy = null; this.fails = 0;
   }
   get settings() { const s = this.config.get('kraken') || {}; return { ...DEFAULTS, ...s, pump: { ...DEFAULTS.pump, ...(s.pump || {}) }, fan: { ...DEFAULTS.fan, ...(s.fan || {}) } }; }
   save(patch) { this.config.set('kraken', { ...this.settings, ...patch }); }
@@ -18,14 +18,19 @@ class KrakenService extends EventEmitter {
     try {
       if (!this.k || !this.k.connected) {
         if (!Kraken.find()) { if (this.k) { this.k = null; this.emit('changed'); } return; }
+        if (this.retryAt && Date.now() < this.retryAt) return;
         const k = new Kraken(this.log);
         k.on('changed', () => this.emit('changed'));
-        if (await k.connect()) { this.k = k; await this.applySaved(); }
-        else { this.lastError = k.error; }
+        if (await k.connect()) { this.k = k; this.lastProbe = k.probe; await this.applySaved(); }
+        else { this.lastError = k.error; this.lastProbe = k.probe; this.retryAt = Date.now() + 15000; }
         this.emit('changed');
         return;
       }
-      if (!this.busy) { await this.k.readStatus(); this.emit('changed'); }
+      if (!this.busy) {
+        try { await this.k.readStatus(); this.fails = 0; }
+        catch (e) { if (++this.fails >= 3) { this.log('warn', 'Kraken antwortet nicht mehr – verbinde neu'); await this.k.close(); this.k = null; this.fails = 0; } }
+        this.emit('changed');
+      }
     } catch (e) { this.log('warn', 'Kraken: ' + e.message); }
     finally { this._ticking = false; }
   }
@@ -54,9 +59,10 @@ class KrakenService extends EventEmitter {
     } finally { this.busy = null; this.emit('changed'); }
   }
   state() {
-    const base = this.k ? this.k.toJSON() : { connected: false, error: this.lastError || null };
+    const base = this.k ? this.k.toJSON() : { connected: false, error: this.lastError || null, probe: this.lastProbe || null };
     return { ...base, busy: this.busy, settings: this.settings, presets: Object.fromEntries(Object.entries(PRESETS).map(([k, v]) => [k, { label: v.label, pump: v.pump, fan: v.fan }])) };
   }
+  retry() { this.retryAt = 0; this.lastError = null; this._tick(); }
   async stop() { clearInterval(this.timer); if (this.k) await this.k.close(); }
 }
 module.exports = KrakenService;

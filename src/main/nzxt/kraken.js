@@ -66,18 +66,55 @@ class Kraken extends EventEmitter {
     if (!HID) return null;
     return HID.devices().find((d) => d.vendorId === VID && MODELS[d.productId]) || null;
   }
+  /** Alle HID-Schnittstellen der Kraken – Windows meldet oft mehrere (verschiedene Usage-Pages). */
+  static candidates() {
+    if (!HID) return [];
+    const seen = new Set();
+    return HID.devices()
+      .filter((d) => d.vendorId === VID && MODELS[d.productId] && !seen.has(d.path) && seen.add(d.path))
+      // Herstellereigene Usage-Page (0xFF00 …) zuerst – dort liegt das Kraken-Protokoll
+      .sort((a, b) => ((b.usagePage || 0) >= 0xff00) - ((a.usagePage || 0) >= 0xff00) || (a.interface || 0) - (b.interface || 0));
+  }
   async connect() {
     if (!HID) { this.error = 'USB-HID-Modul fehlt'; return false; }
-    const info = Kraken.find();
-    if (!info) { this.error = null; return false; }
-    try { this.hid = await HID.HIDAsync.open(info.path); }
-    catch (e) { this.error = `Kraken gefunden, aber belegt (${e.message}). Bitte NZXT CAM beenden.`; return false; }
-    this.info = info; this.pid = info.productId; this.model = MODELS[info.productId];
-    this.hid.on('error', () => this._lost());
-    try { await this.run(() => this._init()); this.error = null; }
-    catch (e) { this.error = 'Initialisierung fehlgeschlagen: ' + e.message; }
-    this.log('info', `${this.model.name} verbunden (Firmware ${this.fw ? this.fw.join('.') : '?'})`);
-    return true;
+    const list = Kraken.candidates();
+    this.probe = { at: new Date().toISOString(), interfaces: list.map((d) => ({ path: d.path, usagePage: hex(d.usagePage), usage: hex(d.usage), interface: d.interface, product: d.product, pid: hex(d.productId) })), attempts: [] };
+    if (!list.length) { this.error = null; return false; }
+    let busy = 0;
+    for (const info of list) {
+      for (const prefix0 of [false, true]) {
+        const att = { path: shortPath(info.path), usagePage: hex(info.usagePage), mode: prefix0 ? 'mit Report-ID 0' : 'direkt' };
+        this.probe.attempts.push(att);
+        let hid;
+        try { hid = await HID.HIDAsync.open(info.path); } catch (e) { att.result = 'Öffnen fehlgeschlagen: ' + e.message; busy++; break; }
+        this.hid = hid; this.prefix0 = prefix0;
+        try {
+          await this.clear();
+          await this.write([0x10, 0x01]);
+          const got = [];
+          let fw = null;
+          for (let i = 0; i < 8 && !fw; i++) { const m = await this.read(400); if (m) { got.push(m.slice(0, 2).map((x) => x.toString(16).padStart(2, '0')).join(' ')); if (m[0] === 0x11) fw = m; } }
+          att.received = got;
+          if (fw) {
+            att.result = 'OK';
+            this.info = info; this.pid = info.productId; this.model = MODELS[info.productId];
+            this.hid.on('error', () => this._lost());
+            try { await this.run(() => this._init()); this.error = null; }
+            catch (e) { this.error = 'Initialisierung fehlgeschlagen: ' + e.message; }
+            this.log('info', `${this.model.name} verbunden (Firmware ${this.fw ? this.fw.join('.') : '?'}, Schnittstelle ${hex(info.usagePage)}, ${att.mode})`);
+            return true;
+          }
+          att.result = got.length ? 'Antwortet, aber nicht auf die Firmware-Abfrage' : 'Keine Antwort';
+        } catch (e) { att.result = 'Fehler: ' + e.message; }
+        try { await hid.close(); } catch {}
+        this.hid = null;
+      }
+    }
+    this.error = busy === list.length
+      ? 'Kraken gefunden, aber belegt. Bitte NZXT CAM komplett beenden (auch im Infobereich und im Task-Manager „NZXT CAM“ / „CAM Service“).'
+      : `Die Kraken antwortet auf keiner ihrer ${list.length} USB-Schnittstellen. Details unter „Diagnose“ auf dieser Seite.`;
+    this.log('warn', 'Kraken: ' + this.error + ' ' + JSON.stringify(this.probe.attempts));
+    return false;
   }
   _lost() { if (!this.hid) return; this.log('warn', 'Kraken getrennt'); this.hid = null; this.status = null; this.emit('changed'); }
   async close() { try { await this.closeBulk(); } catch {} try { this.hid && (await this.hid.close()); } catch {} this.hid = null; }
@@ -88,10 +125,19 @@ class Kraken extends EventEmitter {
   run(fn) { const p = this.queue.then(fn, fn); this.queue = p.catch(() => {}); return p; }
 
   // ---------------- HID ----------------
-  async write(data) { const b = Buffer.alloc(64); Buffer.from(data).copy(b); await this.hid.write(b); }
-  async read(timeout = 1000) { const d = await this.hid.read(timeout); return d && d.length ? [...d] : null; }
+  async write(data) {
+    const b = Buffer.alloc(this.prefix0 ? 65 : 64);
+    Buffer.from(data).copy(b, this.prefix0 ? 1 : 0);
+    await this.hid.write(b);
+  }
+  async read(timeout = 1000) {
+    const d = await this.hid.read(timeout);
+    if (!d || !d.length) return null;
+    const m = [...d];
+    return this.prefix0 && m[0] === 0 && m.length > 64 ? m.slice(1) : m;
+  }
   async readUntil(match, attempts = 12) {
-    for (let i = 0; i < attempts; i++) { const m = await this.read(); if (m && match(m)) return m; }
+    for (let i = 0; i < attempts; i++) { const m = await this.read(600); if (m && match(m)) return m; }
     throw new Error('Keine Antwort vom Gerät');
   }
   /** Schreibt und wartet auf die passende Antwort (erstes Byte = Befehl + 1; Status-Reports 0x75 werden übersprungen) */
@@ -278,10 +324,12 @@ class Kraken extends EventEmitter {
       connected: this.connected, error: this.error,
       model: this.model && this.model.name, family: this.model && this.model.family, fw: this.fw && this.fw.join('.'),
       lcd: this.hasLcd ? { ...this.lcd, res: this.model.res, gif: this.supportsGif } : null,
-      channels: this.model ? this.channels() : [], status: this.status,
+      channels: this.model ? this.channels() : [], status: this.status, probe: this.probe || null,
     };
   }
 }
+function hex(v) { return v === undefined || v === null ? '?' : '0x' + Number(v).toString(16).toUpperCase().padStart(4, '0'); }
+function shortPath(p) { const m = /(mi_\d+|col\d+)/gi; return (String(p).match(m) || []).join('&') || String(p).slice(-24); }
 const HEADER = [0x12, 0xfa, 0x01, 0xe8, 0xab, 0xcd, 0xef, 0x98, 0x76, 0x54, 0x32, 0x10];
 function le32(n) { return [n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, (n >>> 24) & 0xff]; }
 

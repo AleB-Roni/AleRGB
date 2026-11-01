@@ -72,15 +72,31 @@ Pages.kraken = {
     if (!k.connected) {
       root.appendChild(h('div.card.empty', [
         h('div.big', { html: icon('droplet') }),
-        h('h2', 'Keine Kraken gefunden'),
-        h('p', { html: k.error ? `<span style="color:var(--err)">${esc(k.error)}</span>` : 'Unterstützt: Kraken X53/X63/X73 (Pumpe), Kraken Z53/Z63/Z73, Kraken 2023, 2023 Elite, 2024 Elite RGB und 2024 Plus (Pumpe, Lüfter und Display).<br><br>1. Prüfen, ob das interne USB-Kabel der Kraken am Mainboard steckt.<br>2. <b>NZXT CAM beenden</b> (auch im Infobereich) – es blockiert die Kraken.<br>AleRGB verbindet sich automatisch, sobald die Kraken frei ist.' }),
+        h('h2', k.probe && k.probe.interfaces.length ? 'Kraken gefunden, aber keine Verbindung' : 'Keine Kraken gefunden'),
+        h('p', { html: (k.error ? `<span style="color:var(--err)">${esc(k.error)}</span><br><br>` : '') + 'Unterstützt: Kraken X53/X63/X73 (Pumpe), Kraken Z53/Z63/Z73, Kraken 2023, 2023 Elite, 2024 Elite RGB und 2024 Plus (Pumpe, Lüfter und Display).<br><br>1. Prüfen, ob das interne USB-Kabel der Kraken am Mainboard steckt.<br>2. <b>NZXT CAM beenden</b> (auch im Infobereich) – es blockiert die Kraken.<br>AleRGB verbindet sich automatisch, sobald die Kraken frei ist.' }),
+        h('div.row', { style: { justifyContent: 'center' } }, [h('button.btn.primary', { onclick: () => act(() => api('kraken:retry'), 'Verbinde erneut …'), html: icon('refresh') + 'Erneut verbinden' })]),
       ]));
+      root.appendChild(this.diagCard(k));
       return;
     }
     this.stats = h('div.kstats');
     const grid = h('div.kgrid', [k.lcd ? this.displayCard(k) : null, h('div', [this.stats, ...k.channels.map((ch) => this.speedCard(ch, k))])]);
     root.appendChild(grid);
+    root.appendChild(this.diagCard(k));
     this.update();
+  },
+
+  /** Zeigt, welche USB-Schnittstellen gefunden wurden und wie sie reagiert haben */
+  diagCard(k) {
+    const p = k.probe;
+    if (!p) return h('div');
+    const text = JSON.stringify(p, null, 2);
+    const rows = (p.attempts || []).map((a) => `<tr><td>${esc(a.path)}</td><td>${esc(a.usagePage)}</td><td>${esc(a.mode)}</td><td>${esc(a.result || '')}</td><td>${esc((a.received || []).join(', ') || '–')}</td></tr>`).join('');
+    return h('details.card.pad', { style: { marginTop: '16px' }, open: !k.connected }, [
+      h('summary', { style: { cursor: 'pointer', fontWeight: 600 } }, `Diagnose · ${p.interfaces.length} USB-Schnittstelle(n) gefunden`),
+      h('div', { style: { overflowX: 'auto', marginTop: '12px' }, html: `<table class="ktable"><tr><th>Schnittstelle</th><th>Usage-Page</th><th>Modus</th><th>Ergebnis</th><th>Empfangen</th></tr>${rows}</table>` }),
+      h('div.row', { style: { marginTop: '12px' } }, [h('button.btn.sm', { onclick: () => { navigator.clipboard.writeText(text); toast('Diagnose kopiert – füge sie in den Chat ein', 'ok'); }, html: icon('copy') + 'Diagnose kopieren' })]),
+    ]);
   },
 
   // ---------------- Display ----------------

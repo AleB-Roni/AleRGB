@@ -146,6 +146,7 @@ function setupIpc() {
   h('kraken:brightness', (v) => kraken.setBrightness(v));
   h('kraken:orientation', (deg) => kraken.setOrientation(deg));
   h('kraken:liquid', () => kraken.showLiquid());
+  h('kraken:retry', () => kraken.retry());
   h('kraken:upload', (kind, data, name) => kraken.upload(kind, data, name));
   // Eingaben aus dem Renderer (Audio-Analyse / Bildschirm)
   ipcMain.on('inputs:audio', (e, a) => { core.inputs.audio = a; canvas.setAudio(a); });
