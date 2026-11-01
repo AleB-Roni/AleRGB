@@ -54,7 +54,7 @@ class LogitechDriver extends Driver {
     if (!dll) return this.setStatus('error', 'Logitech LED-SDK-DLL nicht gefunden (siehe Hilfe).');
     try {
       const a = loadApi(dll);
-      if (!a.init('Spectra RGB')) throw new Error('LogiLedInit fehlgeschlagen – läuft G HUB und ist die App-Steuerung erlaubt?');
+      if (!a.init('AleRGB')) throw new Error('LogiLedInit fehlgeschlagen – läuft G HUB und ist die App-Steuerung erlaubt?');
       const sel = this.config.devices || [];
       if (sel.includes('keyboard')) this.devices.set('logitech:keyboard', new LogiKeyboard({ id: 'logitech:keyboard', name: 'Logitech Tastatur', vendor: 'Logitech', type: 'keyboard', driver: 'logitech', leds: matrixLeds(21, 6), aspect: 3.2, maxFps: 30 }));
       for (const k of Object.keys(ZONE_DEV)) if (sel.includes(k)) {

@@ -36,7 +36,7 @@ class RazerDriver extends Driver {
         this.setStatus('connecting', 'Verbinde mit Razer Synapse …');
         const res = await fetchJson('http://localhost:54235/razer/chromasdk', {
           method: 'POST', body: JSON.stringify({
-            title: 'Spectra RGB', description: 'Universelle RGB-Steuerung', author: { name: 'Spectra RGB', contact: 'https://github.com' },
+            title: 'AleRGB', description: 'Universelle RGB-Steuerung', author: { name: 'AleRGB', contact: 'https://github.com' },
             device_supported: Object.keys(CATS), category: 'application',
           }),
         });

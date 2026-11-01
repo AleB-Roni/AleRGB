@@ -22,7 +22,7 @@ class YeelightDriver extends Driver {
   static meta = {
     id: 'yeelight', name: 'Yeelight', vendor: 'Xiaomi / Yeelight',
     description: 'Yeelight-Farblampen und Lightstrips im lokalen Netzwerk.',
-    help: 'In der Yeelight-App beim Gerät „LAN-Steuerung“ aktivieren. Die Windows-Firewall muss eingehende Verbindungen für Spectra erlauben (Music Mode).',
+    help: 'In der Yeelight-App beim Gerät „LAN-Steuerung“ aktivieren. Die Windows-Firewall muss eingehende Verbindungen für AleRGB erlauben (Music Mode).',
     defaultEnabled: false,
     fields: [],
   };

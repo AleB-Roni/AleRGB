@@ -131,7 +131,7 @@ class OpenRGBDriver extends Driver {
   static meta = {
     id: 'openrgb', name: 'OpenRGB', vendor: 'Viele Hersteller',
     description: 'Universal-Treiber: Mainboards (ASUS, MSI, Gigabyte, ASRock), RAM, Grafikkarten, Lüfter-Controller, Tastaturen, Mäuse und mehr. Benötigt OpenRGB mit aktiviertem SDK-Server.',
-    help: 'OpenRGB von openrgb.org laden, starten, Tab „SDK Server“ → „Start Server“. Tipp: In OpenRGB unter Einstellungen „Start at login“ + „Start Server“ + „Start minimized“ aktivieren, oder unten den Pfad zu OpenRGB.exe eintragen – dann startet Spectra es automatisch.',
+    help: 'OpenRGB von openrgb.org laden, starten, Tab „SDK Server“ → „Start Server“. Tipp: In OpenRGB unter Einstellungen „Start at login“ + „Start Server“ + „Start minimized“ aktivieren, oder unten den Pfad zu OpenRGB.exe eintragen – dann startet AleRGB es automatisch.',
     defaultEnabled: true,
     fields: [
       { key: 'host', label: 'Host', type: 'text', default: '127.0.0.1' },
@@ -170,7 +170,7 @@ class OpenRGBDriver extends Driver {
     let ver = 0;
     try { const b = await c.request(0, PKT.PROTO, u32(CLIENT_PROTO), 1000); ver = Math.min(CLIENT_PROTO, b.readUInt32LE(0)); } catch { ver = 0; }
     this.proto = ver;
-    const name = Buffer.from('Spectra RGB\0'); c.send(0, PKT.NAME, name);
+    const name = Buffer.from('AleRGB\0'); c.send(0, PKT.NAME, name);
     c.onListUpdated = () => { clearTimeout(this._relist); this._relist = setTimeout(() => this._enumerate().catch((e) => this.log('warn', e.message)), 500); };
     c.onClose = () => { this.clearDevices(); if (!this.stopped) { this.setStatus('error', 'Verbindung zu OpenRGB verloren – verbinde neu …'); setTimeout(() => this._loop(), 3000); } };
     await this._enumerate();

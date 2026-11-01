@@ -1,5 +1,5 @@
 /*
- * Spectra RGB – native Effekt-Bibliothek
+ * AleRGB – native Effekt-Bibliothek
  * Wird im Main-Prozess (Engine) UND im Renderer (Galerie-Vorschau) verwendet.
  *
  * Jeder Effekt liefert eine Funktion (x, y, t, inputs, out) -> schreibt RGB (0..255) in out[0..2].

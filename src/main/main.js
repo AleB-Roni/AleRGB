@@ -10,7 +10,7 @@ const { runDiagnostics } = require('./diagnostics');
 
 const DEMO = process.argv.includes('--demo');
 const HIDDEN = process.argv.includes('--hidden');
-if (process.env.SPECTRA_USERDATA) app.setPath('userData', process.env.SPECTRA_USERDATA);
+if (process.env.ALERGB_USERDATA) app.setPath('userData', process.env.ALERGB_USERDATA);
 
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -22,16 +22,16 @@ function log(level, msg) {
   const e = { t: Date.now(), level, msg: String(msg) };
   logs.push(e); if (logs.length > 500) logs.shift();
   if (win && !win.isDestroyed()) win.webContents.send('log', e);
-  if (level === 'error') console.error(msg); else if (process.env.SPECTRA_DEBUG) console.log(`[${level}] ${msg}`);
+  if (level === 'error') console.error(msg); else if (process.env.ALERGB_DEBUG) console.log(`[${level}] ${msg}`);
 }
 
-const ICON = path.join(__dirname, '..', '..', 'assets', 'icon.png');
+const ICON = path.join(__dirname, '..', '..', 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png');
 
 function createWindow() {
   const s = config.get('settings');
   win = new BrowserWindow({
     width: 1360, height: 860, minWidth: 1000, minHeight: 640, show: false,
-    backgroundColor: '#0a0b12', icon: ICON, title: 'Spectra RGB',
+    backgroundColor: '#0a0b12', icon: ICON, title: 'AleRGB',
     titleBarStyle: 'hidden',
     titleBarOverlay: { color: '#0a0b12', symbolColor: '#c9cbe0', height: 40 },
     webPreferences: { preload: path.join(__dirname, '..', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: false, backgroundThrottling: false },
@@ -49,7 +49,7 @@ function createWindow() {
 function createTray() {
   const img = nativeImage.createFromPath(ICON).resize({ width: 16, height: 16 });
   tray = new Tray(img);
-  tray.setToolTip('Spectra RGB');
+  tray.setToolTip('AleRGB');
   tray.on('click', () => { win.show(); win.focus(); });
   updateTray();
 }
@@ -58,7 +58,7 @@ function updateTray() {
   const s = config.get('settings');
   const fav = library.list.filter((e) => ['native:rainbow', 'native:aurora', 'native:static', 'native:audio_spectrum', 'native:ambilight'].includes(e.key));
   const menu = Menu.buildFromTemplate([
-    { label: 'Spectra RGB öffnen', click: () => { win.show(); win.focus(); } },
+    { label: 'AleRGB öffnen', click: () => { win.show(); win.focus(); } },
     { type: 'separator' },
     { label: s.power ? 'Beleuchtung ausschalten' : 'Beleuchtung einschalten', click: () => setSettings({ power: !s.power }) },
     { label: 'Helligkeit', submenu: [100, 75, 50, 25, 10].map((v) => ({ label: v + ' %', type: 'radio', checked: s.brightness === v, click: () => setSettings({ brightness: v }) })) },
@@ -159,7 +159,7 @@ app.whenReady().then(async () => {
   await core.startDrivers({ demo: DEMO });
   core._applyEffect();
   core.start();
-  log('info', 'Spectra RGB gestartet');
+  log('info', 'AleRGB gestartet');
 
   powerMonitor.on('lock-screen', () => { if (config.get('settings').offOnLock) core.blackout = true; });
   powerMonitor.on('unlock-screen', () => { core.blackout = false; });

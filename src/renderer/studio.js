@@ -8,7 +8,7 @@ const TEMPLATES = {
   <title>Mein Effekt</title>
   <meta description="Eine sanfte Farbwelle – Vorlage für eigene Effekte">
   <meta publisher="Ich">
-  <!-- Jede <meta property> wird zu einer Einstellung in Spectra und zu einer globalen Variable -->
+  <!-- Jede <meta property> wird zu einer Einstellung in AleRGB und zu einer globalen Variable -->
   <meta property="speed" label="Geschwindigkeit" type="number" min="1" max="20" default="6">
   <meta property="color1" label="Farbe 1" type="color" default="#ff00aa">
   <meta property="color2" label="Farbe 2" type="color" default="#00d5ff">
@@ -226,7 +226,7 @@ Pages.studio = {
       h('div', [stage,
         h('div.card.pad', { style: { marginTop: '16px' } }, [h('h2', 'Einstellungen (aus &lt;meta property&gt;)'), paramBox]),
         h('div.card.pad', { style: { marginTop: '16px' } }, [h('h2', 'So funktionieren Canvas-Effekte'), h('div.small.muted', { style: { lineHeight: 1.6 }, html:
-          'Zeichne auf <kbd>&lt;canvas id="exCanvas" width="320" height="200"&gt;</kbd>. Spectra tastet das Bild ab und legt es über dein Geräte-Layout.<br>' +
+          'Zeichne auf <kbd>&lt;canvas id="exCanvas" width="320" height="200"&gt;</kbd>. AleRGB tastet das Bild ab und legt es über dein Geräte-Layout.<br>' +
           '• <kbd>&lt;meta property="name" type="number|color|boolean|combobox|hue|textfield" …&gt;</kbd> wird zur Einstellung & globalen Variable.<br>' +
           '• <kbd>on&lt;name&gt;Changed()</kbd> wird bei Änderungen aufgerufen.<br>' +
           '• <kbd>engine.audio.freq</kbd> (200 Werte), <kbd>engine.audio.level</kbd> (dB), <kbd>engine.audio.density</kbd>, zusätzlich <kbd>engine.audio.bands</kbd>/<kbd>bass</kbd> (0..1).<br>' +

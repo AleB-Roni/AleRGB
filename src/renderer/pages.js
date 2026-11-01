@@ -23,7 +23,7 @@ Pages.devices = {
       root.appendChild(h('div.card.empty', [
         h('div.big', { html: icon('devices') }),
         h('h2', 'Noch keine Geräte gefunden'),
-        h('p', 'Spectra verbindet sich mit OpenRGB, Razer Synapse, Corsair iCUE, Logitech G HUB, SteelSeries GG sowie WLED, Hue, Nanoleaf, Govee und Yeelight. Prüfe die Integrationen oder lass den Kompatibilitäts-Check laufen.'),
+        h('p', 'AleRGB verbindet sich mit OpenRGB, Razer Synapse, Corsair iCUE, Logitech G HUB, SteelSeries GG sowie WLED, Hue, Nanoleaf, Govee und Yeelight. Prüfe die Integrationen oder lass den Kompatibilitäts-Check laufen.'),
         h('div.row', { style: { justifyContent: 'center' } }, [
           h('button.btn.primary', { onclick: () => App.go('diagnostics'), html: icon('activity') + 'Kompatibilitäts-Check' }),
           h('button.btn', { onclick: () => App.go('integrations'), html: icon('plug') + 'Integrationen' }),
@@ -210,7 +210,7 @@ Pages.effects = {
   onPreview(p) { if (this.big) App.paint(this.big, p); },
 };
 async function importUrl() {
-  const url = await modal({ title: 'Effekt aus dem Internet importieren', text: 'Link zu einer <b>.html</b>-Effektdatei (z.B. ein Community-Lightscript auf GitHub) oder einer Spectra-<b>.json</b>. GitHub-Links werden automatisch in Rohdateien umgewandelt.', input: true, placeholder: 'https://github.com/…/effekt.html', okLabel: 'Importieren' });
+  const url = await modal({ title: 'Effekt aus dem Internet importieren', text: 'Link zu einer <b>.html</b>-Effektdatei (z.B. ein Community-Lightscript auf GitHub) oder einer AleRGB-<b>.json</b>. GitHub-Links werden automatisch in Rohdateien umgewandelt.', input: true, placeholder: 'https://github.com/…/effekt.html', okLabel: 'Importieren' });
   if (url) act(() => api('fx:importUrl', url.trim()), 'Effekt importiert und aktiviert').then((k) => api('effect:set', { key: k }));
 }
 async function editEffect(e) {
@@ -423,7 +423,7 @@ Pages.settings = {
     root.appendChild(h('div.page-head', [h('div', [h('h1', 'Einstellungen'), h('p', 'Verhalten, Leistung und Automatisierung.')])]));
     root.appendChild(h('h3', 'Allgemein'));
     root.appendChild(h('div.card.set-list', [
-      item('Mit Windows starten', 'Startet Spectra minimiert im Infobereich.', toggle(s.autostart, set('autostart'))),
+      item('Mit Windows starten', 'Startet AleRGB minimiert im Infobereich.', toggle(s.autostart, set('autostart'))),
       item('Minimiert starten', 'Beim Start nur das Tray-Symbol anzeigen.', toggle(s.startMinimized, set('startMinimized'))),
       item('Beim Schließen in den Infobereich', 'Effekte laufen im Hintergrund weiter.', toggle(s.closeToTray, set('closeToTray'))),
       item('Globale Hotkeys', 'Strg+Alt+L an/aus · Strg+Alt+←/→ Profile · Strg+Alt+↑/↓ Helligkeit', toggle(s.hotkeys, set('hotkeys'))),
@@ -432,7 +432,7 @@ Pages.settings = {
     root.appendChild(h('div.card.set-list', [
       item('Beim Sperren des PCs (Win+L)', 'LEDs aus, solange der Bildschirm gesperrt ist.', toggle(s.offOnLock, set('offOnLock'))),
       item('Im Standby / Ruhezustand', 'LEDs aus, wenn der PC schläft.', toggle(s.offOnSleep, set('offOnSleep'))),
-      item('Beim Beenden', 'LEDs aus, wenn Spectra geschlossen wird.', toggle(s.offOnExit, set('offOnExit'))),
+      item('Beim Beenden', 'LEDs aus, wenn AleRGB geschlossen wird.', toggle(s.offOnExit, set('offOnExit'))),
     ]));
     root.appendChild(h('h3', { style: { marginTop: '26px' } }, 'Leistung & Eingaben'));
     root.appendChild(h('div.card.set-list', [
@@ -440,6 +440,6 @@ Pages.settings = {
       item('Audio-Quelle', 'Für Audio-Effekte und Canvas-Effekte mit engine.audio.', h('select', { onchange: (e) => set('audioSource')(e.target.value) }, [h('option', { value: 'system', selected: s.audioSource === 'system' }, 'Systemsound (Loopback)'), h('option', { value: 'mic', selected: s.audioSource === 'mic' }, 'Mikrofon')])),
       item('Ambilight-Glättung', 'Verhindert Flackern bei schnellen Bildwechseln.', sm),
     ]));
-    root.appendChild(h('p.small.dim', { style: { marginTop: '26px' } }, 'Spectra RGB 1.0 · Effekte und Einstellungen liegen in %APPDATA%\\spectra-rgb'));
+    root.appendChild(h('p.small.dim', { style: { marginTop: '26px' } }, 'AleRGB 1.0 · Effekte und Einstellungen liegen in %APPDATA%\\alergb'));
   },
 };

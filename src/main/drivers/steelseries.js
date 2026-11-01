@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Driver, Device, matrixLeds, linearLeds, fetchJson, sleep } = require('./base');
-const GAME = 'SPECTRA_RGB';
+const GAME = 'ALERGB';
 
 class SSKeyboard extends Device {
   async write(c) {
@@ -22,7 +22,7 @@ class SteelSeriesDriver extends Driver {
   static meta = {
     id: 'steelseries', name: 'SteelSeries GG', vendor: 'SteelSeries',
     description: 'SteelSeries Tastaturen (per Taste), Mäuse und Headsets über die GameSense-Schnittstelle von SteelSeries GG.',
-    help: 'SteelSeries GG installieren und laufen lassen. Spectra erscheint danach in GG → Engine → Apps (GameSense) und kann dort aktiviert werden.',
+    help: 'SteelSeries GG installieren und laufen lassen. AleRGB erscheint danach in GG → Engine → Apps (GameSense) und kann dort aktiviert werden.',
     defaultEnabled: true,
     fields: [],
   };
@@ -34,7 +34,7 @@ class SteelSeriesDriver extends Driver {
         if (!fs.existsSync(props)) throw new Error('SteelSeries GG nicht installiert (coreProps.json fehlt)');
         const { address } = JSON.parse(fs.readFileSync(props, 'utf8'));
         this.base = 'http://' + address;
-        await this.post('game_metadata', { game: GAME, game_display_name: 'Spectra RGB', developer: 'Spectra RGB', deinitialize_timer_length_ms: 15000 });
+        await this.post('game_metadata', { game: GAME, game_display_name: 'AleRGB', developer: 'AleRGB', deinitialize_timer_length_ms: 15000 });
         await this.post('bind_game_event', { game: GAME, event: 'BITMAP', value_optional: true, handlers: [{ 'device-type': 'rgb-per-key-zones', mode: 'bitmap' }] });
         await this.post('bind_game_event', { game: GAME, event: 'MOUSE', value_optional: true, handlers: ['wheel', 'logo'].map((z) => ({ 'device-type': 'mouse', zone: z, mode: 'context-color', 'context-frame-key': z })) });
         await this.post('bind_game_event', { game: GAME, event: 'HEADSET', value_optional: true, handlers: [{ 'device-type': 'headset', zone: 'earcups', mode: 'context-color', 'context-frame-key': 'earcups' }] });

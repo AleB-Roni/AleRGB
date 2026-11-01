@@ -1,37 +1,68 @@
 {
-  "name": "spectra-rgb",
-  "productName": "Spectra RGB",
+  "name": "alergb",
+  "productName": "AleRGB",
   "version": "1.0.0",
   "description": "Universelle RGB-Steuerung für Windows – OpenRGB, Razer Chroma, Corsair iCUE, Logitech G HUB, SteelSeries GG, WLED, Philips Hue, Nanoleaf, Govee, Yeelight",
   "main": "src/main/main.js",
-  "author": "Spectra RGB",
+  "author": "AleB-Roni",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
     "demo": "electron . --demo",
     "icon": "node scripts/make-icon.js",
-    "dist": "electron-builder --win nsis portable",
+    "dist": "electron-builder --win nsis",
     "dist:dir": "electron-builder --win dir"
   },
-  "dependencies": {},
   "optionalDependencies": {
     "koffi": "^2.9.0"
   },
   "devDependencies": {
     "electron": "^33.2.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "resedit": "^2.0.3"
   },
   "build": {
-    "appId": "app.spectra.rgb",
-    "productName": "Spectra RGB",
-    "directories": { "output": "dist" },
-    "files": ["src/**/*", "assets/**/*", "package.json"],
-    "extraResources": [{ "from": "sdk", "to": "sdk", "filter": ["**/*"] }],
+    "appId": "app.alergb",
+    "productName": "AleRGB",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "sdk",
+        "to": "sdk",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "win": {
-      "icon": "assets/icon.png",
-      "target": ["nsis", "portable"],
+      "icon": "assets/icon.ico",
+      "target": [
+        "nsis"
+      ],
+      "signAndEditExecutable": false,
       "requestedExecutionLevel": "asInvoker"
     },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "perMachine": false }
-  }
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AleRGB",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "artifactName": "AleRGB-Setup-${version}.exe",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
+    },
+    "afterPack": "scripts/after-pack.js"
+  },
+  "repository": "https://github.com/AleB-Roni/AleRGB"
 }

@@ -37,7 +37,7 @@ class HueDriver extends Driver {
     }
     if (name === 'pair') {
       if (!this.config.bridge) throw new Error('Zuerst Bridge-IP eintragen.');
-      const r = await fetchJson(`http://${this.config.bridge}/api`, { method: 'POST', body: JSON.stringify({ devicetype: 'spectra_rgb#windows' }) });
+      const r = await fetchJson(`http://${this.config.bridge}/api`, { method: 'POST', body: JSON.stringify({ devicetype: 'alergb#windows' }) });
       if (r[0] && r[0].error) throw new Error(r[0].error.type === 101 ? 'Bitte zuerst den Knopf auf der Bridge drücken.' : r[0].error.description);
       return { patch: { username: r[0].success.username }, message: 'Erfolgreich gekoppelt!' };
     }

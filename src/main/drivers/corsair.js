@@ -42,7 +42,7 @@ class CorsairDriver extends Driver {
   static meta = {
     id: 'corsair', name: 'Corsair iCUE', vendor: 'Corsair',
     description: 'Alle iCUE-Geräte (Tastaturen, Mäuse, Headsets, Lüfter, Commander/Lighting Node, RAM, AIOs) über das offizielle iCUE SDK.',
-    help: 'iCUE installieren → Einstellungen → „SDK aktivieren“ (Software and Games Integration). iCUESDK.x64_2019.dll von github.com/CorsairOfficial/cue-sdk (Releases) in den Ordner „sdk“ von Spectra legen oder Pfad unten eintragen. Hinweis: Nicht gleichzeitig mit dem OpenRGB-Corsair-Treiber verwenden.',
+    help: 'iCUE installieren → Einstellungen → „SDK aktivieren“ (Software and Games Integration). iCUESDK.x64_2019.dll von github.com/CorsairOfficial/cue-sdk (Releases) in den Ordner „sdk“ von AleRGB legen oder Pfad unten eintragen. Hinweis: Nicht gleichzeitig mit dem OpenRGB-Corsair-Treiber verwenden.',
     defaultEnabled: true,
     fields: [
       { key: 'dllPath', label: 'Pfad zu iCUESDK.x64_2019.dll (optional)', type: 'file', default: '' },
