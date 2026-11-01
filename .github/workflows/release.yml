@@ -1,0 +1,37 @@
+name: Release
+
+# Baut den Windows-Installer und veröffentlicht ihn als GitHub-Release,
+# sobald ein Versions-Tag (z.B. v1.0.0) gepusht wird.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Installer bauen
+        run: npx electron-builder --win nsis --publish never
+
+      - name: Release veröffentlichen
+        uses: softprops/action-gh-release@v2
+        with:
+          name: AleRGB ${{ github.ref_name }}
+          body_path: .github/RELEASE_NOTES.md
+          files: |
+            dist/AleRGB-Setup-*.exe
+            dist/AleRGB-Setup-*.exe.blockmap
+            dist/latest.yml
