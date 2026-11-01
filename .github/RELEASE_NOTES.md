@@ -1,19 +1,17 @@
-## AleRGB 1.0.0 – erste Version
+## AleRGB 1.1.0 – Nollie-Unterstützung
 
-Universelle RGB-Steuerung für Windows: Alle Geräte über alle Hersteller hinweg synchron auf einer gemeinsamen Leinwand.
+### Neu
+- **Direkter Treiber für Nollie ARGB-Controller.** Unterstützt werden Nollie 8, Nollie 8 v2, Nollie 8 OS2, Prism 8 und Nollie 1. Der Controller wird direkt per USB angesteuert, OpenRGB, SignalRGB oder die Nollie-Software sind dafür nicht nötig.
+  - Jeder Kanal erscheint als eigenes Gerät im Layout. So kannst du Front-Lüfter, Heck-Lüfter und Strips einzeln platzieren.
+  - Unter *Integrationen → Nollie ARGB → Einstellungen & Hilfe* gibst du pro Kanal Name, Art (Lüfter-Ring oder LED-Strip), LED-Anzahl und die Anzahl der Lüfter in Reihe an.
+  - Der Kompatibilitäts-Check erkennt Nollie-Controller und warnt, wenn OpenRGB den Controller gleichzeitig ansteuert.
+- **Neuer Status „Kein Gerät“:** Ein Treiber ohne angeschlossenes Gerät zeigt keinen grünen „Verbunden“-Status mehr.
 
 ### Installation
-**`AleRGB-Setup-1.0.0.exe`** herunterladen und ausführen. Admin-Rechte sind nicht nötig, Desktop- und Startmenü-Verknüpfungen werden angelegt.
+**`AleRGB-Setup-1.1.0.exe`** herunterladen und ausführen. Die Installation aktualisiert eine vorhandene Version, deine Einstellungen bleiben erhalten.
 > Windows SmartScreen warnt, weil das Programm nicht signiert ist: **Weitere Informationen → Trotzdem ausführen**.
 
-### Enthalten
-- **Treiber:** OpenRGB (Mainboards, RAM, GPUs, ARGB und Hunderte Peripheriegeräte), Razer Chroma, Corsair iCUE, Logitech G HUB, SteelSeries GG, WLED, Philips Hue, Nanoleaf, Govee (LAN) und Yeelight
-- **26 Effekte**, darunter Musik-reaktive Effekte, Bildschirm-Ambilight und ein CPU/RAM-Monitor
-- **Effekt-Studio:** Ebenen-Baukasten ohne Code und ein Code-Editor für HTML-Canvas-Effekte
-- **Import** von Community-Effekten im HTML-Canvas-Format (Datei, Drag & Drop oder URL)
-- **Weitere Funktionen:** Layout-Editor, Profile, Tray-Betrieb, Hotkeys, Autostart und automatisches Abschalten bei Sperre oder Standby
-- **Kompatibilitäts-Check:** erkennt RGB-Hardware und Konflikte mit anderer RGB-Software
-
-### Hinweise
-- Corsair iCUE braucht zusätzlich `iCUESDK.x64_2019.dll` aus dem offiziellen [cue-sdk](https://github.com/CorsairOfficial/cue-sdk/releases) im Ordner `resources\sdk` der Installation.
-- Die Herstellertreiber sind gegen die offiziellen Schnittstellen geschrieben, aber noch nicht mit jeder Hardware getestet. Fehler bitte als Issue melden und das Ergebnis des Kompatibilitäts-Checks anhängen.
+### Nollie einrichten
+1. SignalRGB, die Nollie-Software und gegebenenfalls OpenRGB beenden, damit nur ein Programm den Controller ansteuert.
+2. In AleRGB unter *Integrationen → Nollie ARGB* pro Kanal die LED-Anzahl eintragen und auf **Speichern** klicken.
+3. Unter *Layout* die Kanäle an die richtige Stelle ziehen.

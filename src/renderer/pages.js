@@ -324,10 +324,10 @@ Pages.profiles = {
 // Integrationen
 // ======================================================================
 const DRIVER_STYLE = {
-  openrgb: ['ORGB', '#7c3aed'], razer: ['RZ', '#16a34a'], corsair: ['CR', '#eab308'], logitech: ['LG', '#0ea5e9'], steelseries: ['SS', '#f97316'],
+  openrgb: ['ORGB', '#7c3aed'], razer: ['RZ', '#16a34a'], nollie: ['NL8', '#e11d48'], corsair: ['CR', '#eab308'], logitech: ['LG', '#0ea5e9'], steelseries: ['SS', '#f97316'],
   wled: ['WL', '#06b6d4'], hue: ['HUE', '#8b5cf6'], nanoleaf: ['NL', '#22c55e'], govee: ['GV', '#ef4444'], yeelight: ['YL', '#f59e0b'], simulator: ['DEMO', '#64748b'],
 };
-const STATUS_LABEL = { ok: 'Verbunden', error: 'Fehler', connecting: 'Verbinde …', setup: 'Einrichtung nötig', stopped: 'Gestoppt', disabled: 'Deaktiviert', unsupported: 'Nicht verfügbar' };
+const STATUS_LABEL = { idle: 'Kein Gerät', ok: 'Verbunden', error: 'Fehler', connecting: 'Verbinde …', setup: 'Einrichtung nötig', stopped: 'Gestoppt', disabled: 'Deaktiviert', unsupported: 'Nicht verfügbar' };
 Pages.integrations = {
   title: 'Integrationen', icon: 'plug', open: {},
   render(root) {
@@ -345,6 +345,7 @@ Pages.integrations = {
         let inp;
         if (f.type === 'bool') inp = toggle(!!vals[f.key], (v) => (vals[f.key] = v));
         else if (f.type === 'multi') inp = h('div.multi', f.options.map((o) => { const on = (vals[f.key] || []).includes(o); return h('span.chip.btnchip' + (on ? '.active' : ''), { onclick: (e) => { const arr = new Set(vals[f.key] || []); arr.has(o) ? arr.delete(o) : arr.add(o); vals[f.key] = [...arr]; e.target.classList.toggle('active'); } }, esc(TYPE_LABEL[o] || (o === 'chromalink' ? 'Chroma Link' : o === 'all' ? 'Alle (Fallback)' : o))); }));
+        else if (f.type === 'channels') inp = channelEditor(vals, f);
         else if (f.type === 'file') { const i = h('input', { type: 'text', value: vals[f.key] || '', placeholder: 'C:\\…', oninput: () => (vals[f.key] = i.value) }); inp = h('div.row', { style: { flexWrap: 'nowrap' } }, [i, h('button.btn.sm', { onclick: async () => { const p = await api('dialog:file', [{ name: 'Programme/DLLs', extensions: ['exe', 'dll'] }]); if (p) { i.value = p; vals[f.key] = p; } } }, '…')]); }
         else { const i = h('input', { type: f.type === 'number' ? 'number' : 'text', value: vals[f.key] ?? '', oninput: () => (vals[f.key] = f.type === 'number' ? Number(i.value) : i.value) }); inp = i; }
         return h('div', [h('label', esc(f.label)), inp]);
@@ -374,6 +375,23 @@ Pages.integrations = {
     })));
   },
 };
+
+/** Editor für ARGB-Kanäle (z.B. Nollie): Name, Art, LED-Anzahl und Lüfterzahl pro Kanal */
+function channelEditor(vals, f) {
+  const list = (Array.isArray(vals[f.key]) ? vals[f.key] : f.default).map((c) => ({ ...c }));
+  vals[f.key] = list;
+  const num = (c, k, max, w) => { const i = h('input', { type: 'number', min: 0, max, value: c[k] ?? 0, style: { width: w }, oninput: () => (c[k] = Math.max(0, Math.min(max, Number(i.value) || 0))) }); return i; };
+  return h('div', { style: { display: 'grid', gap: '6px' } }, [
+    h('div.small.dim', { style: { display: 'grid', gridTemplateColumns: 'minmax(80px, 1fr) 106px 58px 54px', gap: '6px' } }, ['Name', 'Art', 'LEDs', 'Lüfter'].map((t) => h('span', t))),
+    ...list.map((c) => {
+      const fans = num(c, 'fans', 20, '100%'); fans.disabled = c.kind !== 'ring';
+      const kind = h('select', { onchange: () => { c.kind = kind.value; fans.disabled = c.kind !== 'ring'; } }, [h('option', { value: 'ring', selected: c.kind === 'ring' }, 'Lüfter-Ring'), h('option', { value: 'strip', selected: c.kind !== 'ring' }, 'LED-Strip')]);
+      const name = h('input', { type: 'text', value: c.name || '', oninput: () => (c.name = name.value) });
+      return h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(80px, 1fr) 106px 58px 54px', gap: '6px' } }, [name, kind, num(c, 'leds', f.max || 999, '100%'), fans]);
+    }),
+    h('div.small.dim', 'Mehrere Lüfter in Reihe an einem Kanal: LEDs = Summe (z.B. 3 × 16 = 48), Lüfter = 3.'),
+  ]);
+}
 
 // ======================================================================
 // Diagnose

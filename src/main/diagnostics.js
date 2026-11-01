@@ -31,6 +31,9 @@ const VENDORS = {
   '320F': { name: 'Glorious / Evision', route: 'OpenRGB', drivers: ['openrgb'] },
   '04D9': { name: 'Holtek (Ducky, diverse OEM)', route: 'OpenRGB', drivers: ['openrgb'] },
   '0416': { name: 'Winbond (diverse ARGB-Controller)', route: 'OpenRGB', drivers: ['openrgb'] },
+  '16D2': { name: 'Nollie (ARGB-Controller)', route: 'AleRGB-Treiber „Nollie ARGB“ – direkt, ohne Zusatzsoftware', drivers: ['nollie'] },
+  '16D5': { name: 'Nollie (ARGB-Controller, OS2-Firmware)', route: 'AleRGB-Treiber „Nollie ARGB“ – direkt, ohne Zusatzsoftware', drivers: ['nollie'] },
+  '3061': { name: 'Nollie 16/32 (ARGB-Controller)', route: 'OpenRGB (Nollie 16/32 werden vom AleRGB-Treiber noch nicht direkt unterstützt)', drivers: ['openrgb'] },
   '1A86': { name: 'QinHeng (DIY/Adalight-Controller)', route: 'OpenRGB (Serial/Adalight) oder WLED', drivers: ['openrgb', 'wled'] },
   '10C4': { name: 'Silicon Labs (diverse LED-/Lüfter-Controller)', route: 'OpenRGB', drivers: ['openrgb'] },
   '1044': { name: 'Gigabyte (Aorus Peripherie)', route: 'OpenRGB', drivers: ['openrgb'] },
@@ -53,6 +56,7 @@ const CONFLICTS = [
   { re: /^(SignalRgb|SignalRGB)\.exe$/i, name: 'SignalRGB', tip: 'Zwei RGB-Programme gleichzeitig führen zu Flackern – SignalRGB beenden.' },
   { re: /^(Aura|AuraCreator)\.exe$/i, name: 'ASUS Aura Creator', tip: 'Beenden, wenn OpenRGB steuern soll.' },
   { re: /^(TTRGBPLUS|Thermaltake.*)\.exe$/i, name: 'Thermaltake TT RGB Plus', tip: 'Für OpenRGB beenden.' },
+  { re: /^(NollieRGB|Nollie|NollieOS|NollieLight)\.exe$/i, name: 'Nollie-Software', tip: 'Belegt den Nollie-Controller – beenden, AleRGB steuert ihn direkt.' },
   { re: /^(OpenRGB)\.exe$/i, name: 'OpenRGB', tip: 'Läuft – stelle sicher, dass der SDK-Server gestartet ist.', ok: true },
   { re: /^(WallpaperEngine|wallpaper64|wallpaper32)\.exe$/i, name: 'Wallpaper Engine (iCUE/Razer/Logitech-Integration)', tip: 'Kann über seine RGB-Integration ebenfalls Geräte ansteuern – in Wallpaper Engine → Einstellungen → Plugins deaktivieren.' },
 ];
@@ -112,6 +116,8 @@ async function runDiagnostics(core) {
   }
   for (const h of hardware) if (!h.active.length) items.push({ level: 'warn', text: `${h.name}-Hardware erkannt, aber kein passender Treiber verbunden. Empfohlen: ${h.route}.` });
   const corsairBoth = core.drivers.get('corsair').status === 'ok' && core.allDevices().some((d) => d.driver === 'openrgb' && /corsair/i.test(d.vendor + d.name));
+  const nollieBoth = core.drivers.get('nollie') && core.drivers.get('nollie').devices.size && core.allDevices().some((d) => d.driver === 'openrgb' && /nollie/i.test(d.vendor + d.name));
+  if (nollieBoth) items.push({ level: 'warn', text: 'Der Nollie-Controller wird doppelt angesteuert (AleRGB-Treiber UND OpenRGB). In OpenRGB unter Settings → Supported Devices „Nollie“ deaktivieren.' });
   if (corsairBoth) items.push({ level: 'warn', text: 'Corsair-Geräte werden doppelt angesteuert (iCUE-SDK UND OpenRGB). In OpenRGB die Corsair-Geräte deaktivieren oder den iCUE-Treiber ausschalten.' });
   if (smb && !smb.pawnio && !smb.winring0 && byVendor.size) items.push({ level: 'info', text: 'Für RAM- und Mainboard-RGB über SMBus benötigt OpenRGB den Treiber „PawnIO“ (wird vom aktuellen OpenRGB-Installer angeboten). Ohne ihn werden RAM-Riegel oft nicht gefunden.' });
   const orgb = core.drivers.get('openrgb');
