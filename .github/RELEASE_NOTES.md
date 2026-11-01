@@ -1,17 +1,26 @@
-## AleRGB 1.1.0 – Nollie-Unterstützung
+## AleRGB 1.2.0 – NZXT Kraken
 
-### Neu
-- **Direkter Treiber für Nollie ARGB-Controller.** Unterstützt werden Nollie 8, Nollie 8 v2, Nollie 8 OS2, Prism 8 und Nollie 1. Der Controller wird direkt per USB angesteuert, OpenRGB, SignalRGB oder die Nollie-Software sind dafür nicht nötig.
-  - Jeder Kanal erscheint als eigenes Gerät im Layout. So kannst du Front-Lüfter, Heck-Lüfter und Strips einzeln platzieren.
-  - Unter *Integrationen → Nollie ARGB → Einstellungen & Hilfe* gibst du pro Kanal Name, Art (Lüfter-Ring oder LED-Strip), LED-Anzahl und die Anzahl der Lüfter in Reihe an.
-  - Der Kompatibilitäts-Check erkennt Nollie-Controller und warnt, wenn OpenRGB den Controller gleichzeitig ansteuert.
-- **Neuer Status „Kein Gerät“:** Ein Treiber ohne angeschlossenes Gerät zeigt keinen grünen „Verbunden“-Status mehr.
+### Neu: Seite „NZXT Kraken“
+Wasserkühlung und Display werden direkt per USB gesteuert, NZXT CAM ist dafür nicht nötig.
+
+- **Eigene Bilder und GIFs aufs Pumpen-Display.** PNG, JPG, WebP, BMP und animierte GIFs werden per Dateiauswahl oder Drag & Drop geladen. Eine runde Live-Vorschau zeigt das Ergebnis, Zoom, Verschieben und Hintergrundfarbe lassen sich anpassen. Das Bild wird automatisch auf die Display-Auflösung gebracht und passend zur Einbaulage gedreht.
+- **Display-Helligkeit** (0–100 %) und **Ausrichtung** (0°/90°/180°/270°).
+- **Temperatur-Anzeige:** Ein Klick schaltet zurück zur Standard-Anzeige der Flüssigkeitstemperatur.
+- **Pumpe und Radiator-Lüfter:** Profile *Leise*, *Ausgewogen*, *Leistung* oder eine feste Leistung, jeweils mit Kurvenansicht. Ab 59 °C laufen beide immer mit 100 %. Die Einstellungen werden beim Start automatisch wieder angewendet.
+- **Live-Werte:** Flüssigkeitstemperatur, Pumpen- und Lüfterdrehzahl.
+
+Unterstützte Modelle:
+- **Kraken Z53/Z63/Z73, Kraken 2023, 2023 Elite, 2024 Elite RGB und 2024 Plus:** Display, Pumpe und Lüfter
+- **Kraken X53/X63/X73:** Pumpe und Messwerte
+- Die Kraken 2023 mit Firmware 2.x kann nur Standbilder anzeigen, keine GIFs.
+
+### Einrichtung
+1. **NZXT CAM beenden**, auch im Infobereich. CAM belegt die Kraken.
+2. In AleRGB die Seite **NZXT Kraken** öffnen. Die Verbindung kommt automatisch zustande.
+3. Kommt beim Übertragen eines Bildes die Meldung „Kein Zugriff auf die Display-Schnittstelle“: Mit [Zadig](https://zadig.akeo.ie/) unter *Options → List All Devices* die Schnittstelle „NZXT Kraken … (Interface 1/2)“ auswählen und **WinUSB** installieren. Die HID-Schnittstelle (Pumpe und Lüfter) dabei nicht ändern.
 
 ### Installation
-**`AleRGB-Setup-1.1.0.exe`** herunterladen und ausführen. Die Installation aktualisiert eine vorhandene Version, deine Einstellungen bleiben erhalten.
+**`AleRGB-Setup-1.2.0.exe`** herunterladen und ausführen. Die Installation aktualisiert eine vorhandene Version, deine Einstellungen bleiben erhalten.
 > Windows SmartScreen warnt, weil das Programm nicht signiert ist: **Weitere Informationen → Trotzdem ausführen**.
 
-### Nollie einrichten
-1. SignalRGB, die Nollie-Software und gegebenenfalls OpenRGB beenden, damit nur ein Programm den Controller ansteuert.
-2. In AleRGB unter *Integrationen → Nollie ARGB* pro Kanal die LED-Anzahl eintragen und auf **Speichern** klicken.
-3. Unter *Layout* die Kanäle an die richtige Stelle ziehen.
+*Protokoll nach [liquidctl](https://github.com/liquidctl/liquidctl), Display- und Bucket-Logik aus `kraken3.py`.*

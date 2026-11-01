@@ -35,6 +35,7 @@ Mit `npm run demo` startet die App mit virtuellen Demo-Geräten. `npm run dist` 
 | **Layout** | Geräte per Drag & Drop auf der 16:9-Leinwand anordnen, damit Effekte realistisch über den Schreibtisch laufen |
 | **Profile** | Effekt, Layout und Helligkeit speichern und per Tray-Menü oder Hotkey wechseln |
 | **Automatik** | Autostart, Tray-Betrieb, Licht aus bei Sperre/Standby/Beenden, globale Hotkeys |
+| **NZXT Kraken** | Eigene Bilder und GIFs aufs Pumpen-Display (mit Zuschnitt und Vorschau), Display-Helligkeit und -Ausrichtung, Temperatur-Anzeige, Profile für Pumpe und Lüfter (Leise/Ausgewogen/Leistung/Fest) sowie Live-Werte für Temperatur und Drehzahl. NZXT CAM wird dafür nicht gebraucht. |
 | **Diagnose** | Erkennt RGB-Hardware über die USB-Hersteller-ID und störende RGB-Software und gibt konkrete Tipps |
 
 ### Hotkeys
@@ -52,6 +53,8 @@ Mit `npm run demo` startet die App mit virtuellen Demo-Geräten. `npm run dist` 
 | **WLED** | ESP-LED-Controller | Wird automatisch gefunden (mDNS) |
 | **Philips Hue** | Farblampen über die Bridge | Bridge per Knopfdruck koppeln |
 | **Nanoleaf** | Shapes, Canvas, Elements, Lines und Light Panels (jedes Panel einzeln) | Koppeln über den Power-Knopf |
+| **Nollie** | Nollie 8 / 8 v2 / Prism 8 / Nollie 1 ARGB-Controller (direkt per USB, jeder Kanal einzeln) | Nichts, nur SignalRGB bzw. die Nollie-Software beenden |
+| **NZXT Kraken** | Kraken X53/X63/X73 (Pumpe), Z53/Z63/Z73, 2023, 2023 Elite, 2024 Elite RGB und 2024 Plus (Pumpe, Lüfter und Display) | Nichts, nur NZXT CAM beenden |
 | **Govee** | LAN-fähige Strips und Lampen | „LAN Control“ in der Govee-App aktivieren |
 | **Yeelight** | Farblampen und Strips | „LAN-Steuerung“ in der Yeelight-App aktivieren |
 

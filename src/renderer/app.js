@@ -2,13 +2,14 @@
 /* global h, icon, esc, Pages, Capture, b64, api, Thumbs */
 const App = {
   state: null, page: 'effects', lock: false,
-  order: ['devices', 'effects', 'studio', 'layout', 'profiles', 'integrations', 'diagnostics', 'settings'],
+  order: ['devices', 'effects', 'studio', 'layout', 'kraken', 'profiles', 'integrations', 'diagnostics', 'settings'],
   async init() {
     this.state = await api('state:get');
     if (!this.state.devices.length) this.page = 'devices';
     window.spectra.on('state', (s) => this.onState(s));
     window.spectra.on('preview', (p) => this.onPreview(p));
     window.spectra.on('log', (l) => Pages.studio.onLog && Pages.studio.onLog(l));
+    window.spectra.on('kraken', (k) => { Pages.kraken.data = k; if (this.page === 'kraken') Pages.kraken.update(); });
     document.getElementById('powerBtn').innerHTML = icon('power');
     document.getElementById('powerBtn').onclick = () => api('settings:update', { power: !this.state.settings.power });
     const br = document.getElementById('brightness');
@@ -25,7 +26,7 @@ const App = {
     if (s.requirements.join() !== prevReq) Capture.sync(s.requirements, s.settings); else Capture.sync(s.requirements, s.settings);
     const ae = document.activeElement;
     const editing = ae && document.getElementById('page').contains(ae) && /INPUT|TEXTAREA|SELECT/.test(ae.tagName) && ae.type !== 'checkbox';
-    if (this.lock || editing || this.page === 'studio') { this._dirty = true; return; }
+    if (this.lock || editing || (this.page === 'studio' || this.page === 'kraken')) { this._dirty = true; return; }
     this.rerender();
   },
   renderChrome() {
@@ -45,7 +46,7 @@ const App = {
     document.getElementById('sideEffectName').textContent = fx ? fx.name : '—';
   },
   go(id) {
-    if (this.page === 'studio' && id !== 'studio') Pages.studio.leave();
+    if ((this.page === 'studio' || this.page === 'kraken') && id !== 'studio') Pages.studio.leave();
     this.page = id; this.renderChrome(); this.rerender();
     document.getElementById('page').scrollTop = 0;
   },
@@ -74,7 +75,7 @@ const App = {
   onPreview(p) {
     this.paint(document.getElementById('sidePreview'), p);
     const P = Pages[this.page]; if (P.onPreview) P.onPreview(p);
-    if (this._dirty && !this.lock && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) && this.page !== 'studio') this.rerender();
+    if (this._dirty && !this.lock && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) && this.page !== 'studio' && this.page !== 'kraken') this.rerender();
   },
 };
 window.addEventListener('DOMContentLoaded', () => App.init().catch((e) => { document.getElementById('page').textContent = 'Fehler: ' + e.message; console.error(e); }));

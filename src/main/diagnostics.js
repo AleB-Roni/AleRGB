@@ -18,7 +18,7 @@ const VENDORS = {
   '1462': { name: 'MSI (Mystic Light)', route: 'OpenRGB (MSI Center Mystic Light deaktivieren)', drivers: ['openrgb'] },
   '048D': { name: 'ITE (Gigabyte RGB Fusion / diverse Mainboards & Tastaturen)', route: 'OpenRGB', drivers: ['openrgb'] },
   '26CE': { name: 'ASRock (Polychrome)', route: 'OpenRGB', drivers: ['openrgb'] },
-  '1E71': { name: 'NZXT', route: 'OpenRGB (NZXT CAM beenden)', drivers: ['openrgb'] },
+  '1E71': { name: 'NZXT', route: 'Kraken-Wasserkühlung: AleRGB-Seite „NZXT Kraken“ (direkt, ohne CAM). Andere NZXT-RGB-Geräte: OpenRGB. NZXT CAM jeweils beenden', drivers: ['openrgb', 'kraken'] },
   '2516': { name: 'Cooler Master', route: 'OpenRGB', drivers: ['openrgb'] },
   '1E7D': { name: 'ROCCAT / Turtle Beach', route: 'OpenRGB', drivers: ['openrgb'] },
   '10F5': { name: 'Turtle Beach', route: 'OpenRGB', drivers: ['openrgb'] },
@@ -103,7 +103,7 @@ async function runDiagnostics(core) {
   // 1) Hardware nach Hersteller
   const byVendor = new Map();
   for (const d of usb) { const v = VENDORS[d.vid]; if (!v) continue; if (!byVendor.has(d.vid)) byVendor.set(d.vid, { ...v, vid: d.vid, devices: new Set() }); if (d.name) byVendor.get(d.vid).devices.add(d.name); }
-  const hardware = [...byVendor.values()].map((v) => ({ ...v, devices: [...v.devices].slice(0, 8), active: v.drivers.filter((id) => core.drivers.get(id) && core.drivers.get(id).status === 'ok') }));
+  const hardware = [...byVendor.values()].map((v) => ({ ...v, devices: [...v.devices].slice(0, 8), active: v.drivers.filter((id) => (id === 'kraken' ? core.kraken && core.kraken.k && core.kraken.k.connected : core.drivers.get(id) && core.drivers.get(id).status === 'ok')) }));
 
   // 2) Software-Konflikte
   const software = [];

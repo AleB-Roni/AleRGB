@@ -7,6 +7,7 @@ const Core = require('./core');
 const CanvasHost = require('./canvasHost');
 const { EffectLibrary, parseHtmlEffect } = require('./effectLibrary');
 const { runDiagnostics } = require('./diagnostics');
+const KrakenService = require('./nzxt/service');
 
 const DEMO = process.argv.includes('--demo');
 const HIDDEN = process.argv.includes('--hidden');
@@ -16,7 +17,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 
-let win, tray, core, config, library, canvas;
+let win, tray, core, config, library, canvas, kraken;
 const logs = [];
 function log(level, msg) {
   const e = { t: Date.now(), level, msg: String(msg) };
@@ -139,6 +140,13 @@ function setupIpc() {
   h('fx:openFolder', () => shell.openPath(library.userDir));
   h('dialog:file', async (filters) => { const r = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: filters || [] }); return r.canceled ? null : r.filePaths[0]; });
   h('app:open', (url) => shell.openExternal(url));
+  // NZXT Kraken
+  h('kraken:get', () => kraken.state());
+  h('kraken:speed', (ch, cfg) => kraken.setSpeed(ch, cfg));
+  h('kraken:brightness', (v) => kraken.setBrightness(v));
+  h('kraken:orientation', (deg) => kraken.setOrientation(deg));
+  h('kraken:liquid', () => kraken.showLiquid());
+  h('kraken:upload', (kind, data, name) => kraken.upload(kind, data, name));
   // Eingaben aus dem Renderer (Audio-Analyse / Bildschirm)
   ipcMain.on('inputs:audio', (e, a) => { core.inputs.audio = a; canvas.setAudio(a); });
   ipcMain.on('inputs:screen', (e, s) => { core.inputs.screen = s; });
@@ -159,6 +167,10 @@ app.whenReady().then(async () => {
   await core.startDrivers({ demo: DEMO });
   core._applyEffect();
   core.start();
+  kraken = new KrakenService(config, log);
+  kraken.on('changed', () => send('kraken', kraken.state()));
+  kraken.start();
+  core.kraken = kraken;
   log('info', 'AleRGB gestartet');
 
   powerMonitor.on('lock-screen', () => { if (config.get('settings').offOnLock) core.blackout = true; });
@@ -175,7 +187,7 @@ app.on('before-quit', async (e) => {
   if (quitting) return;
   e.preventDefault(); quitting = true;
   globalShortcut.unregisterAll();
-  try { config.flush(); core.stop(); await Promise.race([core.stopAll(), new Promise((r) => setTimeout(r, 2500))]); } catch {}
+  try { config.flush(); core.stop(); if (kraken) await kraken.stop(); await Promise.race([core.stopAll(), new Promise((r) => setTimeout(r, 2500))]); } catch {}
   canvas.unload();
   app.exit(0);
 });

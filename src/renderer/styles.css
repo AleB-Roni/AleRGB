@@ -217,3 +217,14 @@ kbd { font: 11px Consolas, monospace; padding: 2px 6px; border-radius: 5px; bord
 .modal { width: 480px; max-width: calc(100vw - 32px); padding: 22px; background: #141726; border: 1px solid var(--line2); border-radius: 16px; }
 .modal h2 { font-size: 17px; } .modal p { color: var(--mute); font-size: 13px; line-height: 1.5; }
 .modal .row { justify-content: flex-end; margin-top: 18px; }
+
+/* ---------- NZXT Kraken ---------- */
+.kgrid { display: grid; grid-template-columns: minmax(360px, 1fr) 1fr; gap: 20px; align-items: start; }
+.kdisplay { display: flex; flex-direction: column; gap: 14px; }
+.kdrop { display: grid; place-items: center; padding: 6px; border-radius: 18px; border: 2px dashed transparent; transition: .15s; }
+.kdrop.over { border-color: var(--accent); background: rgba(139,92,246,.08); }
+.klcd { width: min(320px, 100%); aspect-ratio: 1; border-radius: 50%; box-shadow: 0 30px 80px -25px rgba(139,92,246,.55); }
+.kstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.kstat { padding: 16px; }
+.kval { font-size: 26px; font-weight: 650; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
+.kdisplay .tabs button, .kgrid .tabs button { padding: 6px 12px; }
