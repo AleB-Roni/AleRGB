@@ -36,6 +36,7 @@ Mit `npm run demo` startet die App mit virtuellen Demo-Geräten. `npm run dist` 
 | **Profile** | Effekt, Layout und Helligkeit speichern und per Tray-Menü oder Hotkey wechseln |
 | **Automatik** | Autostart, Tray-Betrieb, Licht aus bei Sperre/Standby/Beenden, globale Hotkeys |
 | **NZXT Kraken** | Eigene Bilder und GIFs aufs Pumpen-Display (mit Zuschnitt und Vorschau), **GIF-Browser** mit GIPHY-Suche und Links von GIPHY, Tenor und Imgur, Display-Helligkeit und -Ausrichtung, Temperatur-Anzeige, Profile für Pumpe und Lüfter (Leise/Ausgewogen/Leistung/Fest) sowie Live-Werte für Temperatur und Drehzahl. NZXT CAM wird dafür nicht gebraucht. |
+| **Lüfter** | Mainboard-Lüfter (CPU_FAN, SYS_FAN …) nach CPU-, GPU- oder Wassertemperatur regeln, mit ziehbarem Kurveneditor, festem Wert oder BIOS-Steuerung. Läuft über ein kleines Hilfsprogramm mit Adminrechten (LibreHardwareMonitor + PawnIO-Treiber), mit Sicherheitsregeln: Notlauf auf 100 % und automatische Rückgabe an das BIOS. |
 | **Diagnose** | Erkennt RGB-Hardware über die USB-Hersteller-ID und störende RGB-Software und gibt konkrete Tipps |
 
 ### Hotkeys

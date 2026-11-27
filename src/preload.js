@@ -1,5 +1,5 @@
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
-const EVENTS = ['state', 'preview', 'log', 'kraken'];
+const EVENTS = ['state', 'preview', 'log', 'kraken', 'fans'];
 contextBridge.exposeInMainWorld('spectra', {
   invoke: async (ch, ...args) => {
     const r = await ipcRenderer.invoke(ch, ...args);

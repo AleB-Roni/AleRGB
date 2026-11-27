@@ -1,3 +1,5 @@
 node_modules/
 dist/
 sdk/*.dll
+fanhelper/bin/
+fanhelper/obj/

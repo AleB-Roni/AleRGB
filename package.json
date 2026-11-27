@@ -1,7 +1,7 @@
 {
   "name": "alergb",
   "productName": "AleRGB",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Universelle RGB-Steuerung für Windows – OpenRGB, Razer Chroma, Corsair iCUE, Logitech G HUB, SteelSeries GG, WLED, Philips Hue, Nanoleaf, Govee, Yeelight",
   "main": "src/main/main.js",
   "author": "AleB-Roni",
@@ -10,8 +10,9 @@
     "start": "electron .",
     "demo": "electron . --demo",
     "icon": "node scripts/make-icon.js",
-    "dist": "electron-builder --win nsis",
-    "dist:dir": "electron-builder --win dir"
+    "dist": "npm run build:fanhelper && electron-builder --win nsis",
+    "dist:dir": "electron-builder --win dir",
+    "build:fanhelper": "dotnet build fanhelper -c Release -o fanhelper/bin"
   },
   "optionalDependencies": {
     "koffi": "^2.9.0",
@@ -40,6 +41,14 @@
         "to": "sdk",
         "filter": [
           "**/*"
+        ]
+      },
+      {
+        "from": "fanhelper/bin",
+        "to": "fanhelper",
+        "filter": [
+          "**/*",
+          "!*.pdb"
         ]
       }
     ],

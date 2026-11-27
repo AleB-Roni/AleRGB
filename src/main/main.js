@@ -9,6 +9,7 @@ const { EffectLibrary, parseHtmlEffect } = require('./effectLibrary');
 const { runDiagnostics } = require('./diagnostics');
 const KrakenService = require('./nzxt/service');
 const gifs = require('./gifs');
+const { FanService } = require('./fans/service');
 
 const DEMO = process.argv.includes('--demo');
 const HIDDEN = process.argv.includes('--hidden');
@@ -18,7 +19,7 @@ if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 
-let win, tray, core, config, library, canvas, kraken;
+let win, tray, core, config, library, canvas, kraken, fans;
 const logs = [];
 function log(level, msg) {
   const e = { t: Date.now(), level, msg: String(msg) };
@@ -148,6 +149,12 @@ function setupIpc() {
   h('kraken:orientation', (deg) => kraken.setOrientation(deg));
   h('kraken:liquid', () => kraken.showLiquid());
   h('kraken:retry', () => kraken.retry());
+  // Mainboard-Lüfter
+  h('fans:get', async () => ({ ...fans.state(), pawnio: fans.pawnio ?? (await fans.pawnioInstalled()) }));
+  h('fans:start', () => fans.start());
+  h('fans:stop', () => fans.stop());
+  h('fans:set', (id, cfg) => fans.setFan(id, cfg));
+  h('fans:settings', (patch) => fans.save(patch));
   // GIF-Browser
   h('gif:hasKey', () => !!config.get('settings').giphyKey);
   h('gif:setKey', async (key) => {
@@ -183,6 +190,11 @@ app.whenReady().then(async () => {
   kraken.on('changed', () => send('kraken', kraken.state()));
   kraken.start();
   core.kraken = kraken;
+  fans = new FanService(config, log, process.env.ALERGB_FAN_HELPER ? { helperCmd: JSON.parse(process.env.ALERGB_FAN_HELPER) } : {});
+  // Wassertemperatur der Kraken als zusätzlicher Kurven-Sensor
+  fans.extraSensors = () => { const st = kraken.k && kraken.k.status; return st ? [{ id: 'kraken:liquid', name: 'Wassertemperatur (Kraken)', hardware: kraken.k.model.name, hwType: 'Kraken', type: 'Temperature', value: st.temp }] : []; };
+  fans.on('changed', () => { clearTimeout(fans._t); fans._t = setTimeout(() => send('fans', fans.state()), 100); });
+  if (fans.settings.autoStart && (process.platform === 'win32' || process.env.ALERGB_FAN_HELPER)) fans.start().catch((e) => log('warn', 'Lüfter: ' + e.message));
   log('info', 'AleRGB gestartet');
 
   powerMonitor.on('lock-screen', () => { if (config.get('settings').offOnLock) core.blackout = true; });
@@ -199,7 +211,7 @@ app.on('before-quit', async (e) => {
   if (quitting) return;
   e.preventDefault(); quitting = true;
   globalShortcut.unregisterAll();
-  try { config.flush(); core.stop(); if (kraken) await kraken.stop(); await Promise.race([core.stopAll(), new Promise((r) => setTimeout(r, 2500))]); } catch {}
+  try { config.flush(); core.stop(); if (kraken) await kraken.stop(); if (fans) await fans.stop(); await Promise.race([core.stopAll(), new Promise((r) => setTimeout(r, 2500))]); } catch {}
   canvas.unload();
   app.exit(0);
 });

@@ -49,6 +49,9 @@ jobs:
       - name: Abhängigkeiten installieren
         run: npm ci
 
+      - name: Lüfter-Dienst bauen (LibreHardwareMonitor)
+        run: dotnet build fanhelper -c Release -o fanhelper/bin
+
       - name: Installer bauen
         run: npx electron-builder --win nsis --publish never
 
